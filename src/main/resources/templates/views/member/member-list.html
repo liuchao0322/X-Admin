@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>欢迎页面-X-admin2.0</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport"
+          content="width=device-width,user-scalable=yes, minimum-scale=0.4, initial-scale=0.8,target-densitydpi=low-dpi"/>
+    <link rel="shortcut icon" href="assets/favicon.ico" th:href="@{/assets/favicon.ico}" type="image/x-icon"/>
+    <link rel="stylesheet" href="assets/css/font.css" th:href="@{/assets/css/font.css}">
+    <link rel="stylesheet" href="assets/css/xadmin.css" th:href="@{/assets/css/xadmin.css}">
+    <script type="text/javascript" src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+    <script type="text/javascript" src="assets/lib/layui/layui.js" th:href="@{/assets/lib/layui/layui.js}"
+            charset="utf-8"></script>
+    <script type="text/javascript" src="assets/js/xadmin.js" th:href="@{/assets/js/xadmin.js}"></script>
+    <!-- 让IE8/9支持媒体查询，从而兼容栅格 -->
+    <!--[if lt IE 9]>
+    <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+    <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+
+<body class="layui-anim layui-anim-up">
+
+
+<div class="x-body">
+    <div class="layui-row">
+        <form class="layui-form layui-col-md12 x-so" target="hidden_frame">
+            <input class="layui-input" placeholder="开始日" name="start" id="start">
+            <input class="layui-input" placeholder="截止日" name="end" id="end">
+            <input type="text" name="username" placeholder="请输入用户名" autocomplete="off" class="layui-input"
+                   id="username">
+            <button class="layui-btn" onclick="sreachUser();"><i class="layui-icon">&#xe615;</i></button>
+            <a class="layui-btn layui-btn-small" style="line-height:1.6em;margin-top:3px;float:right"
+               href="javascript:location.replace(location.href);" title="刷新">
+                <i class="layui-icon" style="line-height:30px">ဂ</i></a>
+        </form>
+        <iframe name='hidden_frame' id="hidden_frame" style="display:none"></iframe>
+    </div>
+    <xblock>
+        <button class="layui-btn layui-btn-danger" onclick="delAll()"><i class="layui-icon"></i>批量删除</button>
+        <button class="layui-btn" onclick="x_admin_show('添加用户','member-add',600,400)"><i class="layui-icon"></i>添加
+        </button>
+        <span class="x-right" style="line-height:40px">共有数据:<span id="count_all"></span>条</span>
+    </xblock>
+
+
+    <table class="layui-table">
+
+    </table>
+
+
+    <div class="page">
+        <div>
+            <input id="dangqianye" type="hidden" value="">
+            <input id="zongyeshu" type="hidden" value="">
+            <a class="prev" href="#" onclick="prev()">&lt;&lt;</a>
+            <a class="num" href="#" onclick="firstPage(1)">首页</a>
+            <a class="num">共</a><a id="count" class="num"></a><a class="num">页</a>
+            <a class="num" href="#" onclick="lastPage(zongyeshu)">尾页</a>
+            <a class="next" href="#" onclick="next()">&gt;&gt;</a>
+        </div>
+    </div>
+
+</div>
+<script>
+    window.onload = function () {
+        getAllUser();
+    }
+    layui.use('laydate', function () {
+        var laydate = layui.laydate;
+
+        //执行一个laydate实例
+        laydate.render({
+            elem: '#start' //指定元素
+        });
+
+        //执行一个laydate实例
+        laydate.render({
+            elem: '#end' //指定元素
+        });
+    });
+
+
+    /**
+     * @param obj,id
+     * 用户-停用
+     */
+    function member_stop(obj, id) {
+        var nowState=$("#State"+id+"").html();
+        if(nowState=="启用"){
+            nowState="停用";
+        }else{
+            nowState="启用";
+        }
+        layer.confirm('确认要'+nowState+'吗？', function (index) {
+            if ($(obj).attr('title') == '启用') {
+                //发异步把用户状态进行更改
+                $.ajax({
+                    url: "User_stop",
+                    data: {id: id},
+                    type: "post",
+                    dataType: "text",
+                    success: function (data) {
+                        var state=$("#State"+id+"").html();
+                        if (data == "ok") {
+                            if(state=="启用"){
+                                $(obj).attr('title', '停用')
+                                $(obj).find('i').html('&#xe62f;');
+                                $(obj).parents("tr").find(".td-status").find('span').addClass('layui-btn-disabled').html("停用");
+                                layer.msg('已停用!', {icon: 5, time: 1000});
+                            }else{
+                                $(obj).attr('title', '启用')
+                                $(obj).find('i').html('&#xe601;');
+                                $(obj).parents("tr").find(".td-status").find('span').removeClass('layui-btn-disabled').html('启用');
+                                layer.msg('已启用!', {icon: 1, time: 1000});
+                            }
+                        }
+                    },
+                    error: function () {
+                        layer.msg("网络连接失败,请稍后再试!",{icon: 9, time: 1000});
+                    }
+
+                })
+
+            } else {
+                $(obj).attr('title', '启用')
+                $(obj).find('i').html('&#xe601;');
+                $(obj).parents("tr").find(".td-status").find('span').removeClass('layui-btn-disabled').html('启用');
+                layer.msg('已启用!', {icon: 1, time: 1000});
+            }
+
+        });
+    }
+
+    /**
+     * @param obj,id
+     * 用户-删除
+     */
+    function member_del(obj, id) {
+        layer.confirm('确认要删除吗？', function (index) {
+            //发异步删除数据
+            $(obj).parents("tr").remove();
+            layer.msg('已删除!', {icon: 1, time: 1000});
+        });
+    }
+    /**
+     * 条件查询用户
+     */
+    function sreachUser() {
+        $.ajax({
+            url: "sreachUser",
+            type: "post",
+            data: {
+                startTime: $("#start").val(),
+                endTime: $("#end").val(),
+                username: $("#username").val()
+            },
+            dataType: "json",
+            success: function (data) {
+                //console.log(data);
+                if (data.userList.length!=0){
+                    $(".layui-table").empty();
+                    $(".layui-table").append('<thead>' + '<tr>' +
+                        '<th></th>' +
+                        '<th>ID</th>' +
+                        '<th>用户名</th>' +
+                        '<th>密码</th>' +
+                        '<th>手机</th>' +
+                        '<th>邮箱</th>' +
+                        '<th>地址</th>' +
+                        '<th>加入时间</th>' +
+                        '<th>状态</th>' +
+                        '<th>操作</th>'
+                        + '</tr>'
+                        + '</thead>');
+                    for (var i = 0; i < data.userList.length; i++) {
+                        $(".layui-table").append('<tbody>' + '<tr>' +
+                            '<td><div class="layui-unselect layui-form-checkbox" lay-skin="primary" data-id=\'2\'>' +
+                            '<input type="checkbox" name="check" value="' + data.userList[i].id + '"/></div></td>' +
+                            '<td>' + data.userList[i].id + '</td>' +
+                            '<td>' + data.userList[i].username + '</td>' +
+                            '<td>' + data.userList[i].password + '</td>' +
+                            '<td>' + data.userList[i].phonenumber + '</td>' +
+                            '<td>' + data.userList[i].email + '</td>' +
+                            '<td>' + data.userList[i].address + '</td>' +
+                            '<td>' + transferTime(data.userList[i].time) + '</td>' +
+                            '<td class="td-status"><span class="layui-btn layui-btn-normal layui-btn-mini">已启用</span>' +
+                            '<td class="td-manage">' +
+                            '<a onclick="member_stop(this,' + data.userList[i].id + ')" href="javascript:;"  title="启用">\n' +
+                            '<i class="layui-icon">&#xe601;</i>\n' +
+                            '</a>' +
+                            '<a title="编辑"  onclick="x_admin_show(\'编辑\',\'member-edit?id=' + data.userList[i].id + '\',600,400)" href="javascript:;">\n' +
+                            '                      <i class="layui-icon">&#xe642;</i>\n' +
+                            '                  </a>' +
+                            '<a onclick="x_admin_show(\'修改密码\',\'member-password\',600,400)" title="修改密码" href="javascript:;">\n' +
+                            '                      <i class="layui-icon">&#xe631;</i>\n' +
+                            '                  </a>' +
+                            '<a title="删除" onclick="member_del(this,\'要删除的id\')" href="javascript:;">\n' +
+                            '                      <i class="layui-icon">&#xe640;</i>\n' +
+                            '                  </a>' +
+                            ' </td>' +
+
+
+                            '</tr>' + '</tbody>')
+                    }
+
+                }else{
+                    layer.alert("查询的用户为空!",{icon: 5, time: 2000});
+                }
+
+            },
+            error: function () {
+                layer.msg("网络连接失败,请稍后再试!",{icon: 9, time: 1000});
+            }
+        })
+
+    }
+
+    /**
+     * 批量删除用户
+     */
+    function delAll() {
+        layer.confirm('确认要删除吗', function () {
+            var arr = [];
+            $("input[name='check']").each(function () {
+                if ($(this).prop("checked") == true) {
+                    arr.push($(this).val());
+                }
+            })
+            $.ajax({
+                url: "delUser",
+                type: "get",
+                data: {"arr": arr},
+                dataType: "json",
+                traditional: true,
+                success: function (data) {
+                    if (data = "true") {
+                        layer.alert("删除成功", {icon: 6}, function () {
+                            layer.close(layer.index);
+                            window.location.reload();
+                        });
+                    }
+                },
+                error: function () {
+                    layer.msg("网络连接失败,请稍后再试!",{icon: 9, time: 1000});
+                }
+            })
+        });
+
+    }
+
+    /**
+     * 获取分页用户数据
+     * @param currentPage
+     */
+    function getAllUser(currentPage) {
+        $.ajax({
+            url: "findUser",
+            type: "post",
+            data: {currentPage: currentPage},
+            dataType: "json",
+            traditional: true,
+            success: function (data) {
+                //console.log(data);
+                //获取data中数据
+                $("#dangqianye").val(data.currentPage);
+                $("#zongyeshu").val(data.countPage);
+                $("#count").html(data.countPage);
+                $("#count_all").html(data.count);
+                $(".layui-table").append('<thead>' + '<tr>' +
+                    '<th></th>' +
+                    '<th>ID</th>' +
+                    '<th>用户名</th>' +
+                    '<th>密码</th>' +
+                    '<th>手机</th>' +
+                    '<th>邮箱</th>' +
+                    '<th>地址</th>' +
+                    '<th>加入时间</th>' +
+                    '<th>状态</th>' +
+                    '<th>操作</th>'
+                    + '</tr>'
+                    + '</thead>');
+                for (var i = 0; i < data.ulist.length; i++) {
+                    $(".layui-table").append('<tbody>' + '<tr>' +
+                        '<td><div class="layui-unselect layui-form-checkbox" lay-skin="primary" data-id=\'2\'>' +
+                        '<input type="checkbox" name="check" value="' + data.ulist[i].id + '"/></div></td>' +
+                        '<td>' + data.ulist[i].id + '</td>' +
+                        '<td>' + data.ulist[i].username + '</td>' +
+                        '<td>' + data.ulist[i].password + '</td>' +
+                        '<td>' + data.ulist[i].phonenumber + '</td>' +
+                        '<td>' + data.ulist[i].email + '</td>' +
+                        '<td>' + data.ulist[i].address + '</td>' +
+                        '<td>' + transferTime(data.ulist[i].time) + '</td>' +
+                        '<td class="td-status"><span class="layui-btn layui-btn-normal layui-btn-mini" id="State'+data.ulist[i].id+'">'+data.ulist[i].user_state+'</span>' +
+                        '<td class="td-manage">' +
+                        '<a onclick="member_stop(this,' + data.ulist[i].id + ')" href="javascript:;"  title="启用">\n' +
+                        '<i class="layui-icon">&#xe601;</i>\n' +
+                        '</a>' +
+                        '<a title="编辑"  onclick="x_admin_show(\'编辑\',\'member-edit?id='+data.ulist[i].id + '\',600,400)" href="javascript:;">\n' +
+                        '                      <i class="layui-icon">&#xe642;</i>\n' +
+                        '                  </a>' +
+                        '<a onclick="x_admin_show(\'修改密码\',\'member-password?id='+data.ulist[i].id+'\',600,400)" title="修改密码" href="javascript:;">\n' +
+                        '                      <i class="layui-icon">&#xe631;</i>\n' +
+                        '                  </a>' +
+                        '<a title="删除" onclick="member_del(this,'+data.ulist[i].id+')" href="javascript:;">\n' +
+                        '                      <i class="layui-icon">&#xe640;</i>\n' +
+                        '                  </a>' +
+                        ' </td>' +
+
+
+                        '</tr>' + '</tbody>')
+
+                }
+
+            },
+            error: function () {
+                layer.msg("网络连接失败,请稍后再试!",{icon: 9, time: 1000});
+            }
+        })
+    }
+
+
+    /**
+     * 分页控制
+     * @param index
+     */
+    /**
+     * 首页
+     */
+    function firstPage(index) {
+        $(".layui-table").empty();
+        getAllUser(index);
+    }
+    /**
+     * 末页
+     */
+    function lastPage(zongyeshu) {
+        zongyeshu = $("#zongyeshu").val();
+        $(".layui-table").empty();
+        getAllUser(zongyeshu);
+    }
+    /**
+     * 下一页
+     */
+    function next(dangqianye) {
+        //清空当前表格
+        $(".layui-table").empty();
+        //给当前页赋值
+        dangqianye = $("#dangqianye").val();
+        //
+        var countPage = $("#zongyeshu").val();
+        if (dangqianye < countPage) {
+            //计算页码
+            var currentPage = (dangqianye - 0 + 1);
+            //再次执行分页查询
+            getAllUser(currentPage);
+        } else {
+            currentPage = countPage;
+            getAllUser(currentPage);
+            layer.msg('当前页已是最后一页!', {icon: 2, time: 1000});
+        }
+
+    }
+    /**
+     * 上一页
+     */
+     function prev(dangqianye) {
+        //清空当前表格
+        $(".layui-table").empty();
+        //给当前页,总页数赋值
+        dangqianye = $("#dangqianye").val();
+        //计算页码
+        var currentPage = (dangqianye - 0 - 1);
+        //页码控制
+        if (currentPage < 1) {
+            currentPage = 1;
+        }
+        //再次执行分页查询
+        getAllUser(currentPage);
+
+
+    }
+
+    /**
+     * 日期格式转换
+     * @param cTime
+     * @returns {string | void | *}
+     */
+    function transferTime(cTime) {
+        //将json串的一串数字进行解析
+        var jsonDate = new Date(parseInt(cTime));
+        //为Date对象添加一个新属性，主要是将解析到的时间数据转换为我们熟悉的“yyyy-MM-dd hh:mm:ss”样式
+        Date.prototype.format = function (format) {
+            var o = {
+                //获得解析出来数据的相应信息，可参考js官方文档里面Date对象所具备的方法
+                "y+": this.getFullYear(),//得到对应的年信息
+                "M+": this.getMonth() + 1, //得到对应的月信息，得到的数字范围是0~11，所以要加一
+                "d+": this.getDate(), //得到对应的日信息
+                "h+": this.getHours(), //得到对应的小时信息 
+                "m+": this.getMinutes(), //得到对应的分钟信息
+                "s+": this.getSeconds(), //得到对应的秒信息
+
+            }
+
+            //将年转换为完整的年形式
+            if (/(y+)/.test(format)) {
+                format = format.replace(RegExp.$1,
+                    (this.getFullYear() + "")
+                        .substr(4 - RegExp.$1.length));
+            }
+
+            //连接得到的年月日 时分秒信息
+            for (var k in o) {
+                if (new RegExp("(" + k + ")").test(format)) {
+                    format = format.replace(RegExp.$1,
+                        RegExp.$1.length == 1 ? o[k] : ("00" + o[k])
+                            .substr(("" + o[k]).length));
+                }
+            }
+            return format;
+        }
+        var newDate = jsonDate.format("yyyy-MM-dd hh:mm:ss");
+        return newDate;
+    }
+</script>
+</body>
+
+</html>

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.w3.org/1999/xhtml">
+  
+  <head>
+    <meta charset="UTF-8">
+    <title>欢迎页面-X-admin2.0</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width,user-scalable=yes, minimum-scale=0.4, initial-scale=0.8,target-densitydpi=low-dpi" />
+    <link rel="shortcut icon" href="assets/favicon.ico" th:href="@{/assets/favicon.ico}" type="image/x-icon"/>
+    <link rel="stylesheet" href="assets/css/font.css" th:href="@{/assets/css/font.css}">
+    <link rel="stylesheet" href="assets/css/xadmin.css" th:href="@{/assets/css/xadmin.css}">
+    <script type="text/javascript" src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+    <script type="text/javascript" src="assets/lib/layui/layui.js" th:href="@{/assets/lib/layui/layui.js}"
+            charset="utf-8"></script>
+    <script type="text/javascript" src="assets/js/xadmin.js" th:href="@{/assets/js/xadmin.js}"></script>
+    <!-- 让IE8/9支持媒体查询，从而兼容栅格 -->
+    <!--[if lt IE 9]>
+      <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+      <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  
+  <body>
+    <div class="x-body">
+      <div class="layui-row">
+        <form class="layui-form layui-col-md12 x-so">
+          <input class="layui-input" placeholder="开始日" name="start" id="start">
+          <input class="layui-input" placeholder="截止日" name="end" id="end">
+          <div class="layui-input-inline">
+            <select name="contrller">
+              <option>支付状态</option>
+              <option>已支付</option>
+              <option>未支付</option>
+            </select>
+          </div>
+          <div class="layui-input-inline">
+            <select name="contrller">
+              <option>支付方式</option>
+              <option>支付宝</option>
+              <option>微信</option>
+              <option>货到付款</option>
+            </select>
+          </div>
+          <div class="layui-input-inline">
+            <select name="contrller">
+              <option value="">订单状态</option>
+              <option value="0">待确认</option>
+              <option value="1">已确认</option>
+              <option value="2">已收货</option>
+              <option value="3">已取消</option>
+              <option value="4">已完成</option>
+              <option value="5">已作废</option>
+            </select>
+          </div>
+          <input type="text" name="username"  placeholder="请输入订单号" autocomplete="off" class="layui-input">
+          <button class="layui-btn"  lay-submit="" lay-filter="sreach"><i class="layui-icon">&#xe615;</i></button>
+        </form>
+      </div>
+      <xblock>
+        <button class="layui-btn layui-btn-danger" onclick="delAll()"><i class="layui-icon"></i>批量删除</button>
+        <button class="layui-btn" onclick="x_admin_show('添加用户','order-add.html')"><i class="layui-icon"></i>添加</button>
+        <button class="layui-btn" onclick="buy();"><i class="layui-icon"></i>模拟购买</button>
+
+        <span class="x-right" style="line-height:40px">共有数据：88 条</span>
+      </xblock>
+      <table class="layui-table">
+       <!------------------内容----------------->
+
+      </table>
+      <div class="page">
+        <div>
+          <input id="dangqianye" type="hidden" value="">
+          <input id="zongyeshu" type="hidden" value="">
+          <a class="prev" href="#" onclick="prev()">&lt;&lt;</a>
+          <a class="num" href="#" onclick="firstPage(1)">首页</a>
+          <a class="num">共</a><a id="count" class="num"></a><a class="num">页</a>
+          <a class="num" href="#" onclick="lastPage(zongyeshu)">尾页</a>
+          <a class="next" href="#" onclick="next()">&gt;&gt;</a>
+        </div>
+      </div>
+
+    </div>
+    <script>
+        window.onload = function () {
+            getAllProduct();
+        }
+      layui.use('laydate', function(){
+        var laydate = layui.laydate;
+        
+        //执行一个laydate实例
+        laydate.render({
+          elem: '#start' //指定元素
+        });
+
+        //执行一个laydate实例
+        laydate.render({
+          elem: '#end' //指定元素
+        });
+      });
+
+
+      /*用户-删除*/
+      function member_del(obj,id){
+          layer.confirm('确认要删除吗？',function(index){
+              //发异步删除数据
+              $(obj).parents("tr").remove();
+              layer.msg('已删除!',{icon:1,time:1000});
+          });
+      }
+
+      function delAll (argument) {
+         
+      }
+      
+      function buy() {
+          var arr = [];
+          $("input[name='check']").each(function () {
+              if ($(this).prop("checked") == true) {
+                  arr.push($(this).val());
+              }
+          })
+          layer.confirm('确认要购买'+arr+'吗？',function(index){
+              //捉到所有被选中的，发异步进行删除
+              x_admin_show('添加用户','order-add.html');
+              $(".layui-form-checked").not('.header').parents('tr').remove();
+          });
+      }
+
+      /**
+       * 分页获取商品列表
+       * @param currentPage
+       */
+      function getAllProduct(currentPage) {
+          $.ajax({
+              url: "findProduct",
+              type: "post",
+              data: {currentPage: currentPage},
+              dataType: "json",
+              traditional: true,
+              success: function (data) {
+                  console.log(data);
+                  //获取data中数据
+                  $("#dangqianye").val(data.currentPage);
+                  $("#zongyeshu").val(data.countPage);
+                  $("#count").html(data.countPage);
+                  $("#count_all").html(data.count);
+                  $(".layui-table").append('<thead>' + '<tr>' +
+                      '<th></th>' +
+                      '<th>ID</th>' +
+                      '<th>商品类别</th>' +
+                      '<th>商品名称</th>' +
+                      '<th>商品价格</th>' +
+                      '<th class="Buy">商品描述</th>' +
+                      '<th>操作</th>'
+                      + '</tr>'
+                      + '</thead>');
+                  for (var i = 0; i < data.productList.length; i++) {
+                      $(".layui-table").append('<tbody>' + '<tr>' +
+                          '<td><div class="layui-unselect layui-form-checkbox" lay-skin="primary" data-id=\'2\'>' +
+                          '<input type="checkbox" name="check" value="' + data.productList[i].id + '"/></div></td>' +
+                          '<td>' + data.productList[i].id + '</td>' +
+                          '<td>' + data.productList[i].sysPtype.product_type + '</td>' +
+                          '<td>' + data.productList[i].products_name + '</td>' +
+                          '<td>' + (data.productList[i].products_prices).toFixed(2) + '</td>' +
+                          '<td class="ReadytoBuy">' + data.productList[i].products_desc + '</td>' +
+                          '<td class="td-manage">' +
+                          '<a title="编辑"  onclick="x_admin_show(\'编辑\',\'member-edit.do?id=' + data.productList[i].id + '\',600,400)" href="javascript:;">\n' +
+                          '                      <i class="layui-icon">&#xe642;</i>\n' +
+                          '                  </a>' +
+                          '<a onclick="x_admin_show(\'修改密码\',\'member-password.do\',600,400)" title="修改密码" href="javascript:;">\n' +
+                          '                      <i class="layui-icon">&#xe631;</i>\n' +
+                          '                  </a>' +
+                          '<a title="删除" onclick="member_del(this,'+data.productList[i].id+')" href="javascript:;">\n' +
+                          '                      <i class="layui-icon">&#xe640;</i>\n' +
+                          '                  </a>' +
+                          ' </td>' +
+
+
+                          '</tr>' + '</tbody>')
+
+                  }
+
+              },
+              error: function () {
+                  layer.msg("网络连接失败,请稍后再试!",{icon: 9, time: 1000});
+              }
+          })
+      }
+        /**
+         * 分页控制
+         * @param index
+         */
+        /**
+         * 首页
+         */
+        function firstPage(index) {
+            $(".layui-table").empty();
+            getAllProduct(index);
+        }
+        /**
+         * 末页
+         */
+        function lastPage(zongyeshu) {
+            zongyeshu = $("#zongyeshu").val();
+            $(".layui-table").empty();
+            getAllProduct(zongyeshu);
+        }
+        /**
+         * 下一页
+         */
+        function next(dangqianye) {
+            //清空当前表格
+            $(".layui-table").empty();
+            //给当前页赋值
+            dangqianye = $("#dangqianye").val();
+            //
+            var countPage = $("#zongyeshu").val();
+            if (dangqianye < countPage) {
+                //计算页码
+                var currentPage = (dangqianye - 0 + 1);
+                //再次执行分页查询
+                getAllProduct(currentPage);
+            } else {
+                currentPage = countPage;
+                getAllProduct(currentPage);
+                layer.msg('当前页已是最后一页!', {icon: 2, time: 1000});
+            }
+
+        }
+        /**
+         * 上一页
+         */
+        function prev(dangqianye) {
+            //清空当前表格
+            $(".layui-table").empty();
+            //给当前页,总页数赋值
+            dangqianye = $("#dangqianye").val();
+            //计算页码
+            var currentPage = (dangqianye - 0 - 1);
+            //页码控制
+            if (currentPage < 1) {
+                currentPage = 1;
+            }
+            //再次执行分页查询
+            getAllProduct(currentPage);
+
+
+        }
+
+
+        
+
+    </script>
+
+  </body>
+
+</html>

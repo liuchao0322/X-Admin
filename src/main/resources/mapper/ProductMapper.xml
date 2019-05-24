@@ -1,0 +1,22 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.emp.empsystem.dao.ProductMapper">
+    <resultMap id="ProductResult" type="com.emp.empsystem.entity.SysProduct">
+        <id property="id" column="id"/>
+        <result property="products_name" column="products_name"/>
+        <result property="products_prices" column="products_prices"/>
+        <result property="Products_desc" column="Products_desc"/>
+        <association property="sysPtype" javaType="com.emp.empsystem.entity.SysPtype">
+            <id property="id" column="id"/>
+            <result property="product_type" column="product_type"/>
+        </association>
+    </resultMap>
+    <!--分页获取商品集合-->
+    <select id="findProductByPage" resultMap="ProductResult" parameterType="Integer">
+      SELECT sp.id,spt.product_type,sp.products_name,sp.products_prices,sp.products_desc
+      FROM sys_product sp,sys_ptype spt,sys_product_ptype spp
+      WHERE sp.id=spp.sys_product_id and spt.id=spp.sys_ptype_id limit #{0},#{1}
+    </select>
+
+</mapper>

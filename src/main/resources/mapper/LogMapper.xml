@@ -1,0 +1,17 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.emp.empsystem.dao.LogMapper">
+    <insert id="addLog" parameterType="com.emp.empsystem.entity.SysLog">
+        insert into sys_log(username,object,operation,time)value(#{username},#{object},#{operation},now())
+    </insert>
+    <select id="queryLog" resultType="com.emp.empsystem.entity.SysLog">
+    select * from sys_log
+  /*  SELECT sl.username,suser.username as object,sl.operation,sl.time
+    From sys_user suser,sys_log sl
+    WHERE sl.object=suser.id*/
+</select>
+
+
+</mapper>

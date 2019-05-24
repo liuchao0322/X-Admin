@@ -1,0 +1,111 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.emp.empsystem.dao.UserMapper">
+    <resultMap id="UserResult" type="com.emp.empsystem.entity.SysUser">
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="password" column="password"/>
+        <result property="phonenumber" column="phonenumber"/>
+        <result property="email" column="email"/>
+        <result property="address" column="address"/>
+        <result property="time" column="time"/>
+        <result property="user_state" column="user_state"/>
+        <!--角色-->
+        <association property="sysRole" javaType="com.emp.empsystem.entity.SysRole">
+            <id property="id" column="id"/>
+            <result property="role" column="role"/>
+            <result property="description" column="description"/>
+        </association>
+        <!--权限-->
+        <association property="sysPermission" javaType="com.emp.empsystem.entity.SysPermission">
+            <id property="id" column="id"/>
+            <result property="name" column="name"/>
+            <result property="descritpion" column="descritpion"/>
+            <result property="url" column="url"/>
+        </association>
+    </resultMap>
+    <!--分页获取用户集合-->
+    <select id="findUserByPage" resultMap="UserResult" parameterType="Integer">
+        SELECT
+        su.*, sr. NAME
+        FROM
+        sys_user su,
+        sys_role sr,
+        sys_role_user sru
+        WHERE
+        su.id = sru.sys_user_id
+        AND sr.id = sru.sys_role_id
+        AND sr.id = 2
+        limit #{0},#{1}
+    </select>
+    <!--获取用户总数-->
+    <select id="count" resultType="Integer">
+        SELECT
+        count(1)
+        FROM
+        sys_user su,
+        sys_role sr,
+        sys_role_user sru
+        WHERE
+        su.id = sru.sys_user_id
+        AND sr.id = sru.sys_role_id
+        AND sr.id = 2
+    </select>
+    <!--删除用户-->
+    <update id="updateUser" parameterType="com.emp.empsystem.entity.SysUser">
+            update sys_user set username=#{username},password=#{password},phonenumber=#{phonenumber},email=#{email},address=#{address} where id=#{id}
+    </update>
+    <!--批量删除用户-->
+    <delete id="delUser" parameterType="Integer">
+        delete from sys_user where id in
+        <foreach collection="array" item="arr" open="(" separator=","
+                 close=")">
+            #{arr}
+        </foreach>
+    </delete>
+    <!--查询用户当前状态-->
+    <select id="getUserState" parameterType="Integer" resultType="String">
+        SELECT user_state from sys_user where id=#{id}
+    </select>
+    <!--用户停用-->
+    <update id="User_stop">
+        update sys_user set user_state=#{user_state} where id=#{id}
+    </update>
+    <!--根据时间段和用户名查询用户-->
+    <select id="findUserByTimeAndName" resultMap="UserResult" parameterType="String">
+        SELECT su.*
+        FROM sys_user su,sys_role sr,sys_role_user sru
+        WHERE su.id=sru.sys_user_id AND sr.id=sys_role_id AND sr.id=2 AND TIME BETWEEN #{startTime} AND #{endTime} AND su.username=#{username}
+    </select>
+    <!--根据时间段和用户名查询管理员-->
+    <select id="findManagerByTimeAndName" resultMap="UserResult" parameterType="String">
+       SELECT su.*
+        FROM sys_user su,sys_role sr,sys_role_user sru
+        WHERE su.id=sru.sys_user_id AND sr.id=sys_role_id AND sr.id=1 AND TIME BETWEEN #{startTime} AND #{endTime} AND su.username=#{username}
+    </select>
+    <!--根据时间段查询用户-->
+    <select id="findUserByTime" resultMap="UserResult" parameterType="String">
+        SELECT su.*
+        FROM sys_user su,sys_role sr,sys_role_user sru
+        WHERE su.id=sru.sys_user_id AND sr.id=sys_role_id AND sr.id=2 AND TIME BETWEEN #{startTime} AND #{endTime}
+    </select>
+    <!--根据时间段查询管理员-->
+    <select id="findManagerByTime" resultMap="UserResult" parameterType="String">
+       SELECT su.*
+        FROM sys_user su,sys_role sr,sys_role_user sru
+        WHERE su.id=sru.sys_user_id AND sr.id=sys_role_id AND sr.id=1 AND TIME BETWEEN #{startTime} AND #{endTime}
+    </select>
+    <!--根据用户名查询用户-->
+    <select id="findUserByName" resultMap="UserResult" parameterType="String">
+        SELECT su.*
+        FROM sys_user su,sys_role sr,sys_role_user sru
+        WHERE su.id=sru.sys_user_id AND sr.id=sys_role_id AND sr.id=2 AND su.username=#{username}
+    </select>
+    <!--根据用户名查询管理员-->
+    <select id="findManagerByName" resultMap="UserResult" parameterType="String">
+        SELECT su.*
+        FROM sys_user su,sys_role sr,sys_role_user sru
+        WHERE su.id=sru.sys_user_id AND sr.id=sys_role_id AND sr.id=1 AND su.username=#{username}
+    </select>
+</mapper>
