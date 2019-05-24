@@ -4,6 +4,7 @@ import com.emp.empsystem.entity.SysPermission;
 import com.emp.empsystem.entity.SysUser;
 import com.emp.empsystem.service.PermissionService;
 import com.emp.empsystem.service.UserService;
+import com.emp.empsystem.util.RedisCacheManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.GrantedAuthority;
@@ -29,8 +30,8 @@ public class MyUserService implements UserDetailsService {
     @Resource
     private PermissionService permissionService;
 
-    public UserDetails loadUserByUsername(String username) {
 
+    public UserDetails loadUserByUsername(String username) {
         SysUser user = userService.findUserByUsername(username);
         if (user != null) {
             System.out.println("user信息:" + user.getUsername());

@@ -18,6 +18,11 @@ public class SysUser {
     public SysUser() {
 
     }
+    public SysUser(String username, String password) {
+        this.username = username;
+        this.password = password;
+
+    }
     public SysUser(String username, String password, String phonenumber, String email, String address) {
         this.username = username;
         this.password = password;
