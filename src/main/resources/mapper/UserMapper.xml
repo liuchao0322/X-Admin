@@ -25,6 +25,11 @@
             <result property="url" column="url"/>
         </association>
     </resultMap>
+
+    <!--注册-->
+    <insert id="UserReg" parameterType="com.emp.empsystem.entity.SysUser">
+        INSERT INTO sys_user (username,PASSWORD,phonenumber,email,address,TIME,user_state)VALUES(#{username},#{password},#{phonenumber},#{email},#{address},NOW(),"启用")
+    </insert>
     <!--分页获取用户集合-->
     <select id="findUserByPage" resultMap="UserResult" parameterType="Integer">
         SELECT

@@ -10,6 +10,8 @@ import java.util.List;
  * @create 2019/4/17 19:44
  */
 public interface UserService {
+    //注册
+    int UserReg(SysUser sysUser);
     //根据用户名查询用户信息(集合)
     List<SysUser> findByUserName(String username);
     //根据用户名查询用户信息
@@ -47,4 +49,9 @@ public interface UserService {
 
     //通过用户名查询管理员
     List<SysUser> findManagerByName(@Param("username") String username);
+
+    //通过id查找角色
+    String QueryRoleNameByID(int id);
+
+    int AddPeopleByNameAndRole(@Param("username") String username, @Param("name") String name);
 }

@@ -19,6 +19,11 @@ public class UserServiceImpl extends Thread implements UserService{
     private UserMapper userMapper;
 
     @Override
+    public int UserReg(SysUser sysUser) {
+        return userMapper.UserReg(sysUser);
+    }
+
+    @Override
     public List<SysUser> findByUserName(String username) {
         return userMapper.findByUserName(username);
     }
@@ -97,6 +102,16 @@ public class UserServiceImpl extends Thread implements UserService{
     @Override
     public List<SysUser> findManagerByName(String username) {
         return userMapper.findManagerByName(username);
+    }
+
+    @Override
+    public String QueryRoleNameByID(int id) {
+        return userMapper.QueryRoleNameByID(id);
+    }
+
+    @Override
+    public int AddPeopleByNameAndRole(String username, String name) {
+        return userMapper.AddPeopleByNameAndRole(username, name);
     }
 
 

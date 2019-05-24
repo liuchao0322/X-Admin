@@ -1,6 +1,7 @@
 package com.emp.empsystem.dao;
 
 import com.emp.empsystem.entity.SysUser;
+import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -9,6 +10,9 @@ import java.util.List;
 
 @Mapper
 public interface UserMapper {
+    //注册
+    int UserReg(SysUser sysUser);
+
     //根据用户名查询用户信息(集合)
     @Select("select * from sys_user where username=#{username}")
     List<SysUser> findByUserName(String username);
@@ -58,5 +62,12 @@ public interface UserMapper {
 
     //通过用户名查询管理员
     List<SysUser> findManagerByName(@Param("username") String username);
+
+    //通过id查找角色
+    @Select("SELECT name FROM sys_role WHERE id=#{id}")
+    String QueryRoleNameByID(int id);
+
+    @Insert("INSERT INTO sys_role_user(sys_user_id,sys_role_id)VALUES((SELECT id FROM sys_user WHERE username=#{username}),(select id from sys_role where name=#{name}))")
+    int AddPeopleByNameAndRole(@Param("username") String username, @Param("name") String name);
 
 }

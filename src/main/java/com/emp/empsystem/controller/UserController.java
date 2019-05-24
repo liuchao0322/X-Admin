@@ -5,6 +5,7 @@ import com.emp.empsystem.entity.SysLog;
 import com.emp.empsystem.entity.SysUser;
 import com.emp.empsystem.service.LogService;
 import com.emp.empsystem.service.UserService;
+import com.emp.empsystem.util.BCryptPasswordEncoderTest;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -58,6 +59,37 @@ public class UserController {
     @RequestMapping("member-add")
     public String member_add(){
         return "views/member/member-add";
+    }
+
+    //注册
+    @ResponseBody
+    @RequestMapping("/reg")
+    public void reg(HttpServletRequest request,HttpServletResponse response) throws IOException {
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        String croleid = request.getParameter("roleid");
+        int roleid = Integer.parseInt(croleid);
+        String username = request.getParameter("username");
+        System.out.println(username);
+        String password = request.getParameter("password");
+        String md5Password = encoder.encode(password);
+        String phonenumber = request.getParameter("phonenumber");
+        String email = request.getParameter("email");
+        String address = request.getParameter("address");
+        SysUser sysUser=new SysUser(username,md5Password,phonenumber,email,address);
+        if (userService.findUserByUsername(sysUser.getUsername())==null){
+            if (userService.UserReg(sysUser)>0){
+                //获取ROLE
+                String role = userService.QueryRoleNameByID(roleid);
+                int i = userService.AddPeopleByNameAndRole(username, role);
+                if (i > 0) {
+                    PrintWriter out = response.getWriter();
+                    out.write("ok");
+                    out.flush();
+                    out.close();
+                }
+            }
+
+        }
     }
 
     //分页获取用户集合
