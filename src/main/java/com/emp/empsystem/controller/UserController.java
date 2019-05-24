@@ -35,10 +35,16 @@ public class UserController {
     @Resource
     private LogService logService;
 
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
+//    @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
     @RequestMapping("/member-list.html")
     public String member_list() {
         return "views/member/member-list";
+    }
+
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
+    @RequestMapping("/admin-list")
+    public String admin_list() {
+        return "views/admin/admin-list";
     }
 
     @RequestMapping("/member-edit")
@@ -56,15 +62,16 @@ public class UserController {
         session.setAttribute("userid", id);
         return "views/member/member-password";
     }
+
     @RequestMapping("member-add")
-    public String member_add(){
+    public String member_add() {
         return "views/member/member-add";
     }
 
     //注册
     @ResponseBody
     @RequestMapping("/reg")
-    public void reg(HttpServletRequest request,HttpServletResponse response) throws IOException {
+    public void reg(HttpServletRequest request, HttpServletResponse response) throws IOException {
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
         String croleid = request.getParameter("roleid");
         int roleid = Integer.parseInt(croleid);
@@ -75,9 +82,9 @@ public class UserController {
         String phonenumber = request.getParameter("phonenumber");
         String email = request.getParameter("email");
         String address = request.getParameter("address");
-        SysUser sysUser=new SysUser(username,md5Password,phonenumber,email,address);
-        if (userService.findUserByUsername(sysUser.getUsername())==null){
-            if (userService.UserReg(sysUser)>0){
+        SysUser sysUser = new SysUser(username, md5Password, phonenumber, email, address);
+        if (userService.findUserByUsername(sysUser.getUsername()) == null) {
+            if (userService.UserReg(sysUser) > 0) {
                 //获取ROLE
                 String role = userService.QueryRoleNameByID(roleid);
                 int i = userService.AddPeopleByNameAndRole(username, role);
